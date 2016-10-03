@@ -1,0 +1,30 @@
+.search {
+  padding: 0;
+  margin: 0 0 40px 0;
+}
+
+#search-input {
+  position: fixed;
+  height: 40px;
+  /*width: 92%; TODO: COMMENTED BECAUSE NO SIDE BAR*/
+  width: 98%;
+  margin-left: 20px;
+
+  -webkit-app-region: drag; /* Make window draggable 'through' input */
+
+  color: #FFF;
+  background: #121F33;
+
+  border-radius: 0;
+  border: 0;
+  border-bottom: 2px solid #435C7A;
+  box-shadow: 0 0 0;
+
+  z-index: 2;
+}
+
+#search-input:focus {
+  border: 0;
+  border-bottom: 2px solid #435C7A;
+  box-shadow: 0 0 0;
+}

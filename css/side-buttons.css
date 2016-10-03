@@ -1,0 +1,48 @@
+.side-buttons {
+  -webkit-app-region: drag; /* Make this window draggable 'through' input */
+
+  position: absolute;
+  width: 50px;
+  height: inherit;
+  margin: auto;
+
+  background: #2C3C52;
+
+  z-index: 3;
+}
+
+.btn {
+  -webkit-app-region: no-drag;
+
+  margin-bottom: 10px;
+  width: 50px;
+
+  border-radius: 0;
+
+  background-color: #2C3C52;
+  border-color: #2C3C52;
+}
+
+.btn:hover {
+  color: white;
+  background-color: #121F33;
+  border-color: #121F33;
+}
+
+.btn.active {
+  background-color: #121F33;
+  border-color: #121F33;
+}
+
+.btn.active:hover {
+  background-color: #121F33;
+  border-color: #121F33;
+}
+
+.btn.active.focus {
+  outline: 0;
+}
+
+input[type="radio"] {
+  display: none;
+}

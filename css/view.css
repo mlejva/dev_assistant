@@ -1,0 +1,87 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  overflow-y: hidden;
+}
+
+body {
+  height: 100px;
+
+  color: #FFF;
+  background: #121F33;
+  /*background: -webkit-linear-gradient(left top, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.1) 20%, rgba(18, 31, 51, 1) 0% );*/
+}
+
+
+
+a {
+  color: #00A77F;
+}
+
+a:hover {
+  color: #00D9A5;
+}
+
+.scrollable {
+  overflow-y: auto;
+}
+
+.container {
+  height: 100%;
+  width: 100%;
+
+  margin: 0;
+  padding: 0;
+}
+
+.left {
+  flex: 1;
+}
+
+.right {
+  flex: 1;
+}
+
+.center {
+  flex: 1;
+}
+
+.questions {
+  position: absolute;
+  margin: 0 0 0 0;
+  padding: 0;
+  left: 0;
+
+  width: 50%;
+  height: 94%;
+}
+
+.answers {
+  position: absolute;
+  margin: 0 0 0 0;
+  padding: 0;
+  right: 0;
+
+  width: 50%;
+  height: 94%;
+
+  overflow-x: hidden; /* TODO: Instead of hidding overflow elements should not go out of bounds of answers class */
+}
+
+.slider {
+  position: absolute;
+  margin: -1px 0 0 0;
+  padding: 0;
+  left: 50%;
+
+  width: 5px;
+  height: 94%;
+
+  visibility: hidden;
+  cursor: col-resize;
+
+  background: #435C7A;
+}

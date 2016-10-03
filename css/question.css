@@ -1,0 +1,38 @@
+.question {
+  width: 95%;
+  margin: 10px auto 0 auto;
+  padding: 0 10px;
+
+  background: rgba(21, 46, 74, 0.5);
+
+  border-left: 3px solid #B23A2C;
+
+  list-style: none;
+  cursor: pointer;
+}
+
+.question:hover {
+  background: #1B3B5E;
+}
+
+.answered {
+  border-left: 3px solid #00A77F;
+}
+
+.selected {
+  background: #1B3B5E;
+}
+
+.question-title {
+  font-size: 10px;
+}
+
+.question-link {
+  padding-bottom: 10px;
+
+  font-size: 14px;
+}
+
+.question-body {
+  margin: 0 auto;
+}
