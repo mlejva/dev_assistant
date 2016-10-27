@@ -3,12 +3,15 @@
 /* ----- Global variables ----- */
 // Properties must be "var" instead of "constants" because
 // script can be loaded multiple times through side buttons
+const CONSTS = require('../js/constants.js') // Current pathname is in html folder
+const Config = require('electron-config')
+const config = new Config()
 const { shell } = require('electron')
 let isDraggingSlider = false
 
 let questionsIDs = []
 let selectedQuestionIndex = 0
-let newQEl = document.registerElement('question-element', QuestionElement)
+// let newQEl = document.registerElement('question-element', QuestionElement)
 /* ----- jQuery ready function ----- */
 $(function () {
   let searchInput = $('#search-input')
@@ -16,13 +19,14 @@ $(function () {
   searchInput.val(lastSearchInput)
 
   if (searchInput.val()) {
-    windowFullSize()
+    //windowFullSize()
     searchInput.select()
+    restoreLastSession()
 
-    showQuestions(config.get(CONSTS.CONFIG_QUESTIONS))
+    // TODO
     // Enable navigation using up & down key arrows
-    enableNavigationThroughElements('question', false)
-
+    // enableNavigationThroughElements('question', false)
+    /*
     let selectedQuestionID = config.get(CONSTS.CONFIG_SELECTED_QUESTION)
     if (selectedQuestionID) {
       selectQuestion(selectedQuestionID)
@@ -35,11 +39,6 @@ $(function () {
       let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
       updateLayout(sliderPosX, lastBounds.width)
     }
-    // showAnswers(config.get(CONSTS.CONFIG_ANSWERS))
-    /*
-    searchStackOverflow(searchInput.val(), (questions) => {
-      showQuestions(questions)
-    })
     */
   }
 
@@ -48,16 +47,18 @@ $(function () {
   })
 
   searchInput.keydown((e) => {
+    if (e.which === CONSTS.ARROW_DOWN_KEYCODE || e.which === CONSTS.ARROW_UP_KEYCODE) {
+      e.preventDefault()
+    }
     if (e.which === CONSTS.ENTER_KEYCODE) { // User pressed enter
       clearView()
 
       if (searchInput.val()) {
-        windowFullSize()
-        searchStackOverflow(searchInput.val(), (questions) => {
-          config.set(CONSTS.CONFIG_QUESTIONS, questions)
-          showQuestions(questions)
+        // windowFullSize()
+        searchStackOverflow(searchInput.val(), () => {
+          // TODO
           // Enable navigation using up & down key arrows
-          enableNavigationThroughElements('question', true)
+          // enableNavigationThroughElements('question', true)
 
           let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
           updateLayout(sliderPosX)
@@ -66,12 +67,6 @@ $(function () {
         windowFullSize()
         hideSlider()
       }
-    }
-  })
-
-  searchInput.keydown((e) => {
-    if (e.which === CONSTS.ARROW_DOWN_KEYCODE || e.which === CONSTS.ARROW_UP_KEYCODE) {
-      e.preventDefault()
     }
   })
 
@@ -98,198 +93,82 @@ $(function () {
 })
 
 /* ----- Functions ----- */
-function showQuestions (questions) {
-  for (let q of questions) {
-    let qHTML = ''
-    if (q[CONSTS.SO_QUESTION_IS_ANSWERED_JSON_KEY]) {
-      qHTML += `<li id="${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}" class="question answered">`
-    } else {
-      qHTML += `<li id="${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}" class="question">`
-    }
-    qHTML += '<div class="row question-title">' +
-              '<div class="col-lg-12">' +
-                `<h4>${q[CONSTS.SO_QUESTION_TITLE_JSON_KEY]}</h4>` +
-              '</div>' + // Close "col-lg-12"
-            '</div>' // Close "row" and "question-title"
-    qHTML += '<div class="row">' +
-              '<div class="col-lg-12">' +
-                `<h7>ID: ${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}</h7>` +
-              '</div>' + // Close "col-lg-12"
-            '</div>' // Close "row" and "question-title"
-    qHTML += '<div class="row question-link">' +
-              '<div class="col-lg-12">' +
-                `<a id="link-${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}" href="${q[CONSTS.SO_QUESTION_LINK_JSON_KEY]}">` +
-                  'Open in Browser' +
-                '</a>' +
-              '</div>' + // Close "col-lg-12"
-            '</div>' // Close "row" and "question-link"
-    /*
-    qHTML += '<div class="row question-body">' +
-              '<div class="col-lg-12">' +
-                q[CONSTS.SO_QUESTION_BODY_JSON_KEY] +
-              '</div>' + // Close "col-lg-12"
-            '</div>' // Close "row"
-    */
-    qHTML += '</li>' // Close "question"
-    $('.questions').append(qHTML)
-    $(`#${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}`).data('question', q)
+function restoreLastSession () {
+  const savedQuestions = loadSavedQuestions()
+  for (let q of savedQuestions) {
+    let soQuestion = document.createElement('so-question')
 
-    /* ----- Question events ----- */
-    // Open all links in default browser
-    let qLinkInDOM = $(`#link-${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}`)
-    qLinkInDOM.click((event) => {
-      event.preventDefault()
-      shell.openExternal(qLinkInDOM.attr('href'))
-    })
-    let currentQ = $(`#${q[CONSTS.SO_QUESTION_ID_JSON_KEY]}`)
-    $(currentQ).click(() => {
-      if (!$(currentQ).hasClass('selected')) {
-        $('.question').removeClass('selected')
-        currentQ.addClass('selected')
-        config.set(CONSTS.CONFIG_SELECTED_QUESTION, q[CONSTS.SO_QUESTION_ID_JSON_KEY])
-        // scrollIfElementNotVisible('selected')
-        $('.answers').empty()
-        $('.answers').append(CONSTS.SPINNER_HTML)
-        getAnswersToQuestion(q[CONSTS.SO_QUESTION_ID_JSON_KEY], (answers, question) => {
-          config.set(CONSTS.CONFIG_SELECTED_QUESTION_ANSWERS, answers)
-          showAnswers(answers, question)
-        })
-      }
-    })
+      soQuestion.answered = q.answered
+      soQuestion.title = q.title
+      soQuestion.body = q.body
+      soQuestion.id = q.id
+      soQuestion.link = q.link
+     document.getElementById('questions-list').appendChild(soQuestion)
   }
+  // TODO: Select last selected question
+
+  let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
+  updateLayout(sliderPosX)
 }
 
-function showAnswers (answers, question) {
-  $('.answers').empty()
-  let questionDetailHTML = '<div class="question-detail">' +
-                            '<div class="row question-detail-title">' +
-                              '<div class="col-lg-12">' +
-                                `<h4>Question: ${question[CONSTS.SO_QUESTION_TITLE_JSON_KEY]}</h4>` +
-                              '</div>' + // Close "col-lg-12"
-                            '</div>' + // Close "row" and "question-detail-title"
-                            '<div class="row question-detail-body">' +
-                              '<div class="col-lg-12">' +
-                                question[CONSTS.SO_QUESTION_BODY_JSON_KEY] +
-                              '</div>' + // Close "col-lg-12"
-                            '</div>' + // Close "row" and "question-detail-body"
-                          '</div>' // Close "question-detail"
-  $('.answers').append(questionDetailHTML)
-
-  if (answers.length === 0) {
-    let html = '<div class="row text-center">' +
-                '<div class="col-lg-12">' +
-                  'Question has no answers.' +
-                '</div>' + // Close "col-lg-12"
-              '</div>' // Close "row"
-    $('.answers').append(html)
-  } else {
-    for (let a of answers) {
-      let aHTML = '<li class="answer">'
-      if (a[CONSTS.SO_ANSWER_IS_ACCEPTED_JSON_KEY]) {
-        aHTML += '<div class="row answer-is-accepted">' +
-                  '<div class="col-lg-12">' +
-                    'Answer is accepted' +
-                  '</div>' + // Close "col-lg-12"
-                '</div>' // Close "row"
-      } else {
-        aHTML += '<div class="row answer-not-accepted">' +
-                  '<div class="col-lg-12">' +
-                    'Answer is not accepted' +
-                  '</div>' + // Close "col-lg-12"
-                '</div>' // Close "row"
-      }
-      aHTML += '<div class="row upvotes">' +
-                '<div class="col-lg-12">' +
-                  `Upvotes: ${a[CONSTS.SO_ANSWER_SCORE_JSON_KEY]}` +
-                '</div>' + // Close "col-lg-12"
-              '</div>' // Close "row"
-      aHTML += '<div class="row">' +
-                '<div class="col-lg-12">' +
-                  `${a[CONSTS.SO_ANSWER_BODY_JSON_KEY]}` +
-                '</div>' + // Close "col-lg-12"
-              '</div>' // Close "row"
-      aHTML += '</li>' // Close "answer"
-      aHTML += '<hr class="hr-answer">'
-      $('.answers').append(aHTML)
-    }
-  }
+function loadSavedQuestions () {
+  return config.get(CONSTS.CONFIG_QUESTIONS)
 }
 
-function getAnswersToQuestion (questionID, callback) {
-  let answers = []
-  let jsonHTML = CONSTS.SO_ANSWERS_TO_QUESTION_BASE_API + encodeURIComponent(questionID) + CONSTS.SO_ANSWERS_TO_QUESTION_PARAMETERS_API
-  $.getJSON(jsonHTML, (data) => {
-    let items = data.items
-    $.each(items, (key, a) => {
-      let answer = {}
-      $.each(a, (key, value) => {
-        switch (key) {
-          case CONSTS.SO_ANSWER_IS_ACCEPTED_JSON_KEY:
-            answer[CONSTS.SO_ANSWER_IS_ACCEPTED_JSON_KEY] = value
-            break
-          case CONSTS.SO_ANSWER_SCORE_JSON_KEY:
-            answer[CONSTS.SO_ANSWER_SCORE_JSON_KEY] = value
-            break
-          case CONSTS.SO_ANSWER_BODY_JSON_KEY:
-            answer[CONSTS.SO_ANSWER_BODY_JSON_KEY] = value
-            break
-          case CONSTS.SO_ANSWER_LINK_JSON_KEY:
-            answer[CONSTS.SO_ANSWER_LINK_JSON_KEY] = value
-            break
-        }
-      })
-      answers.push(answer)
-    })
-  })
-  .done(() => {
-    let question = $(`#${questionID}`).data('question')
-    callback(answers, question)
-  })
+function saveQuestions (questionsSaveObjects) {
+  config.set(CONSTS.CONFIG_QUESTIONS, questionsSaveObjects)
 }
 
 function searchStackOverflow (userInput, callback) {
   // windowFullSize()
-  $('.spinner').append(CONSTS.SPINNER_HTML)
+  $('.loading-center').append(CONSTS.LOADING_INDICATOR_HTML)
 
-  let questions = []
   let jsonHTML = CONSTS.SO_SEARCH_QUESTIONS_API + `&q=${encodeURIComponent(userInput)}`
-  console.log(jsonHTML)
   $.getJSON(jsonHTML, (data) => {
     let items = data.items
+    let questionsSaveObjects = [] // Because DOM elements cannot be converted to JSON
     $.each(items, (key, q) => {
-      console.log('Between')
-      let questionEl = new newQEl()
-      console.log(questionEl)
-      let question = {}
+      let soQuestion = document.createElement('so-question')
+
       $.each(q, (key, value) => {
         switch (key) {
           case CONSTS.SO_QUESTION_IS_ANSWERED_JSON_KEY:
-            question[CONSTS.SO_QUESTION_IS_ANSWERED_JSON_KEY] = value
+            soQuestion.answered = value
             break
           case CONSTS.SO_QUESTION_TITLE_JSON_KEY:
-            question[CONSTS.SO_QUESTION_TITLE_JSON_KEY] = value
+            soQuestion.title = decodeHTML(value)
             break
           case CONSTS.SO_QUESTION_BODY_JSON_KEY:
-            question[CONSTS.SO_QUESTION_BODY_JSON_KEY] = value
+            soQuestion.body = decodeHTML(value)
             break
           case CONSTS.SO_QUESTION_ID_JSON_KEY:
-            question[CONSTS.SO_QUESTION_ID_JSON_KEY] = value
+            soQuestion.id = value
             break
           case CONSTS.SO_QUESTION_LINK_JSON_KEY:
-            question[CONSTS.SO_QUESTION_LINK_JSON_KEY] = value
+            soQuestion.link = decodeHTML(value)
             break
         }
       })
-      questions.push(question)
+      const questionSaveObject = {
+        answered: soQuestion.answered,
+        title: soQuestion.title,
+        body: soQuestion.body,
+        id: soQuestion.id,
+        link: soQuestion.link
+      }
+      questionsSaveObjects.push(questionSaveObject)
+      document.getElementById('questions-list').appendChild(soQuestion)
     })
+    saveQuestions(questionsSaveObjects)
   })
   .done(() => {
-    $('.spinner').empty()
-    callback(questions)
+    $('.loading-center').empty()
+    callback()
   })
   .fail((jqXHR, status, error) => {
     clearView()
     $('.questions').append(error)
+    console.log(`Error while trying to get SO questions - ${error}`)
   })
 }
 
@@ -304,6 +183,7 @@ function windowFullSize () {
 
 function enableNavigationThroughElements (elementClass, preselectFirst) {
 
+  // TODO
   /*
   let el = $(`.${elementClass}`)
   let elSelected = null
@@ -389,9 +269,11 @@ function isElementInView (element, fullyInView) {
 }
 
 function clearView () {
-  $('.spinner').empty()
+  $('.loading-center').empty()
   $('.questions').empty()
+  $('.questions-list').empty()
   $('.answers').empty()
+  $('.answers-list').empty()
   hideSlider()
 }
 
@@ -434,4 +316,8 @@ function updateLayout (sliderX, bodyWidth) {
 
 function hideSlider () {
   $('.slider').css('visibility', 'hidden')
+}
+
+function decodeHTML(encoded) {
+  return $("<textarea/>").html(encoded).text()
 }

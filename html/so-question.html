@@ -1,0 +1,163 @@
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+
+<dom-module id='so-question'>
+  <style>
+    :host[selected] > .wrapper {
+      background: #1B3B5E;
+    }
+    :host[answered] > .wrapper {
+      border-left: 3px solid #00A77F;
+    }
+    .wrapper {
+      width: 95%;
+      margin: 10px auto 0 auto;
+      padding: 0 10px;
+
+      background: rgba(21, 46, 74, 0.5);
+
+      border-left: 3px solid #B23A2C;
+
+      list-style: none;
+      cursor: pointer;
+    }
+    .wrapper:hover {
+      background: #1B3B5E;
+    }
+    .title {
+      font-size: 10px;
+    }
+    .link {
+      padding-bottom: 10px;
+
+      font-size: 14px;
+    }
+  </style>
+
+  <template>
+  <div class='wrapper'>
+
+    <div class='row title'>
+      <div class='col-lg-12'>
+        <h4>[[title]]</h4>
+      </div>
+    </div>
+
+    <div class='row link'>
+      <div class='col-lg-12'>
+        <a on-click='_handleLinkClick' id='link-[[id]]' href='[[link]]'>
+          Open in Browser
+        </a>
+      </div>
+    </div>
+    
+  </div>
+  </template>
+
+  <script>
+  (() => {
+    'use strict'
+
+    const { shell } = require('electron')
+
+    class SoQuestion {
+
+      beforeRegister () {
+        // Takes camelcase class name 'StockTicker' -> 'stock-ticker'.
+        let is = this.constructor.name.replace(/\W+/g, '-')
+            .replace(/([a-z\d])([A-Z])/g, '$1-$2').toLowerCase()
+
+        this.is = is
+        this.properties = {
+          title: String,
+          body: String,
+          id: String,
+          link: String,
+          answered: {
+            type: Boolean,
+            value: false,
+            // notify: true
+            reflectToAttribute: true
+          },
+          selected: {
+            type: Boolean,
+            value: false,
+            notify: true,
+            reflectToAttribute: true
+          }
+        }
+        this.listeners = {
+          'tap' : '_questionTap'
+        }
+      }
+
+/* Event handlers */
+      _handleLinkClick (e) {
+        e.preventDefault()
+        let linkURL = e.srcElement.attributes.href.textContent
+        shell.openExternal(linkURL)
+      }
+
+      _questionTap () {
+        this._selectQuestion()
+        this._showAnswers()
+      }
+/* ------ */
+
+      _selectQuestion () {
+        // Deselect previously selected question
+        // Can use: $('so-question[selected]')[0].selected = false? Since everytime is selected only a single question?
+        for (let q of $('so-question[selected]')) {
+          q.selected = false
+        }
+
+        this.selected = !this.selected
+      }
+
+      _showAnswers () {
+        $('.answers').empty()
+        $('.answers').append(CONSTS.LOADING_INDICATOR_HTML)
+
+        this._getAnswers(() => {
+          $('#loading-indicator').remove()
+        })
+      }
+
+      _getAnswers (callback) {
+        // let answers = []
+        let jsonHTML = CONSTS.SO_ANSWERS_TO_QUESTION_BASE_API + encodeURIComponent(this.id) + CONSTS.SO_ANSWERS_TO_QUESTION_PARAMETERS_API
+        $.getJSON(jsonHTML, (data) => {
+          let items = data.items
+          $.each(items, (key, a) => {
+            let soAnswer = document.createElement('so-answer')
+
+            $.each(a, (key, value) => {
+              switch (key) {
+                case CONSTS.SO_ANSWER_IS_ACCEPTED_JSON_KEY:
+                  soAnswer.accepted = value
+                  break
+                case CONSTS.SO_ANSWER_SCORE_JSON_KEY:
+                  soAnswer.score = value
+                  break
+                case CONSTS.SO_ANSWER_BODY_JSON_KEY:
+                  soAnswer.body = value
+                  break
+                case CONSTS.SO_ANSWER_LINK_JSON_KEY:
+                  soAnswer.link = value
+                  break
+              }
+            })
+            // answers.push(answer)
+            document.getElementById('answers-list').appendChild(soAnswer)
+          })
+        })
+        .done(() => {
+          callback()
+        })
+      }
+    }
+
+  Polymer(SoQuestion) // Register this element (this.is will be used as an element name)
+  })()
+  </script>
+
+</dom-module>

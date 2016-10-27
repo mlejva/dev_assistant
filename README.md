@@ -1,6 +1,6 @@
 # dev_assistant
 
-A assistant for developers which search StackOverflow for yor query and displays answers.
+An assistant for developers which search StackOverflow for yor query and displays answers.
 
 Currently working only on macOS.
 

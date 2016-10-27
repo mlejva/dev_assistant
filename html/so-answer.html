@@ -1,0 +1,116 @@
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+
+<dom-module id='so-answer'>
+  <style>
+    .accepted-text {
+      color: #B23A2C;
+      font-weight: bold;
+    }
+
+    :host[accepted] > .wrapper > .accepted-text { /* Override the accepted-text color when an answer is accepted */
+      color: #00A77F;
+    }
+
+    .wrapper {
+      top: 0;
+      padding: 0 10px;
+
+      line-height: 27px;
+
+      background: rgba(21, 46, 74, 0.5);
+
+      list-style: none;
+    }
+
+    .wrapper > img {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .upvotes {
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .hr-answer {
+      margin: 10px 0;
+
+      border-top: 2px solid #435C7A;
+    }
+  </style>
+
+  <template>
+  <div class='wrapper'>
+
+    <div class='row accepted-text'>
+      <div id='accepted-text-area' class='col-lg-12'>
+      </div>
+    </div>
+
+    <div class='row upvotes'>
+      <div class='col-lg-12'>
+        Upvotes: [[score]]
+      </div>
+    </div>
+
+    <div class='row body'>
+      <div id='body-area' class='col-lg-12'>
+      </div>
+    </div>
+
+    <hr class='hr-answer'>
+    
+  </div>
+  </template>
+
+  <script>
+  (() => {
+    'use strict'
+
+    class SoAnswer {
+
+      beforeRegister () {
+        // Takes camelcase class name 'StockTicker' -> 'stock-ticker'.
+        let is = this.constructor.name.replace(/\W+/g, '-')
+            .replace(/([a-z\d])([A-Z])/g, '$1-$2').toLowerCase()
+
+        this.is = is
+        this.properties = {
+          score: Number,
+          body: String,
+          link: String,
+          accepted: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
+          }
+        }
+      }
+
+      attached () {
+        this._updateBody()
+        this._updateAcceptedText()
+        if (this.accepted) {
+            console.log(`Upvotes count of the accepted answer: ${this.score}`)
+        }
+      }
+
+      _updateBody () {
+        // Inject the answer body as DOM nodes
+        const bodyArea = Polymer.dom(this.root).querySelector('#body-area')
+        $(bodyArea).append(this.body)
+      }
+
+      _updateAcceptedText () {
+        let acceptedTextArea = Polymer.dom(this.root).querySelector('#accepted-text-area')
+        const acceptedText = this.accepted ? 'Answer is accepted' : 'Answer is not accepted'
+        if (this.accepted) console.log(`Accepted: ${acceptedText}`)
+        $(acceptedTextArea).append(acceptedText)
+      }
+    }
+
+    Polymer(SoAnswer)
+  })()
+  </script>
+
+</dom-module>

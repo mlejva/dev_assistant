@@ -5,7 +5,10 @@
 
     <script>window.$ = window.jQuery = require('jquery')</script>
     <!--<script src='../js/side-buttons.js'></script> TODO: COMMENTED BECAUSE NO SIDE BAR -->
-    <script src='../js/question-element.js'></script>
+    <script src='../bower_components/webcomponentsjs/webcomponents-lite.js'></script>
+    <link rel='import' href='../html/so-answer.html'>
+    <link rel='import' href='../html/so-question.html'>
+    <!--<script src='../js/question-element.js'></script>-->
     <script src='../js/search.js'></script>
 
     <!-- Tether for Bootstrap -->
@@ -18,7 +21,7 @@
     <link href='../css/search.css' type='text/css' rel='stylesheet'>
     <link href='../css/question.css' type='text/css' rel='stylesheet'>
     <link href='../css/answer.css' type='text/css' rel='stylesheet'>
-    <link href='../css/spinner.css' type='text/css' rel='stylesheet'>
+    <link href='../css/loading-indicator.css' type='text/css' rel='stylesheet'>
     <!--<link href='../css/side-buttons.css' type='text/css' rel='stylesheet'> TODO: COMMENTED BECAUSE NO SIDE BAR -->
     <link href='../css/view.css' type='text/css' rel='stylesheet'>
 
@@ -90,11 +93,11 @@
 
 
          <div class='row'>
-           <div class='col-lg-12 spinner text-center'></div>
+           <div class='col-lg-12 loading-center text-center'></div>
          </div>
 
          <div class='left'>
-            <ul class='questions scrollable'></ul>
+            <ul id='questions-list' class='questions scrollable'></ul>
          </div>
 
          <div class='center'>
@@ -102,7 +105,7 @@
          </div>
 
          <div class='right'>
-            <ul class='answers scrollable'></ul>
+            <ul id='answers-list' class='answers scrollable'></ul>
       </div>
 
     </div>

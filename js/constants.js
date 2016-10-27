@@ -1,19 +1,19 @@
 'use strict'
 
-const SPINNER_HTML = `<div class="sk-fading-circle">
-                      <div class="sk-circle1 sk-circle"></div>
-                      <div class="sk-circle2 sk-circle"></div>
-                      <div class="sk-circle3 sk-circle"></div>
-                      <div class="sk-circle4 sk-circle"></div>
-                      <div class="sk-circle5 sk-circle"></div>
-                      <div class="sk-circle6 sk-circle"></div>
-                      <div class="sk-circle7 sk-circle"></div>
-                      <div class="sk-circle8 sk-circle"></div>
-                      <div class="sk-circle9 sk-circle"></div>
-                      <div class="sk-circle10 sk-circle"></div>
-                      <div class="sk-circle11 sk-circle"></div>
-                      <div class="sk-circle12 sk-circle"></div>
-                    </div>`
+const LOADING_INDICATOR_HTML = `<div id="loading-indicator" class="sk-fading-circle">
+                                <div class="sk-circle1 sk-circle"></div>
+                                <div class="sk-circle2 sk-circle"></div>
+                                <div class="sk-circle3 sk-circle"></div>
+                                <div class="sk-circle4 sk-circle"></div>
+                                <div class="sk-circle5 sk-circle"></div>
+                                <div class="sk-circle6 sk-circle"></div>
+                                <div class="sk-circle7 sk-circle"></div>
+                                <div class="sk-circle8 sk-circle"></div>
+                                <div class="sk-circle9 sk-circle"></div>
+                                <div class="sk-circle10 sk-circle"></div>
+                                <div class="sk-circle11 sk-circle"></div>
+                                <div class="sk-circle12 sk-circle"></div>
+                              </div>`
 
 const SO_KEY = 'wkazQ2XH3buNy7D)0hnXWw(('
 // TODO: More specific constants for API and final API will be createdy of these pieces
@@ -57,7 +57,7 @@ const CONFIG_VIEW = {
 }
 
 module.exports = {
-  SPINNER_HTML: SPINNER_HTML,
+  LOADING_INDICATOR_HTML: LOADING_INDICATOR_HTML,
   SO_KEY: SO_KEY,
   SO_SEARCH_QUESTIONS_API: SO_SEARCH_QUESTIONS_API,
   SO_ANSWERS_TO_QUESTION_BASE_API: SO_ANSWERS_TO_QUESTION_BASE_API,
