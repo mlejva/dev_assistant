@@ -49,7 +49,7 @@
         </a>
       </div>
     </div>
-    
+
   </div>
   </template>
 
@@ -81,8 +81,8 @@
           selected: {
             type: Boolean,
             value: false,
-            notify: true,
-            reflectToAttribute: true
+            reflectToAttribute: true,
+            observer: '_selectedChange'
           }
         }
         this.listeners = {
@@ -101,14 +101,19 @@
         this._selectQuestion()
         this._showAnswers()
       }
-/* ------ */
+/* ---------- */
+
+/* Observers */
+      _selectedChange (newVal, oldVal) {
+        if (newVal) {
+          this._showAnswers()
+        }
+      }
+/* ---------- */
 
       _selectQuestion () {
-        // Deselect previously selected question
-        // Can use: $('so-question[selected]')[0].selected = false? Since everytime is selected only a single question?
-        for (let q of $('so-question[selected]')) {
-          q.selected = false
-        }
+        if ($('so-question[selected]').length !== 0)
+          $('so-question[selected]')[0].selected = false
 
         this.selected = !this.selected
       }

@@ -42,6 +42,26 @@ $(function () {
     */
   }
 
+
+/* Event handlers */
+  $(window).keydown((e) => {
+    if (e.which === CONSTS.ARROW_DOWN_KEYCODE || e.which === CONSTS.ARROW_UP_KEYCODE) {
+      e.preventDefault()
+
+      if ($('so-question[selected]').length === 0) {
+        selectFirstQuestion()
+      } else {
+        if (e.which === CONSTS.ARROW_UP_KEYCODE) {
+          selectPreviousQuestion()
+        } else { // down arrow
+          selectNextQuestion()
+        }
+      }
+      
+      scrollIfQuestionNotVisible()
+    }
+  })
+
   searchInput.on('input', () => {
     config.set(CONSTS.CONFIG_USER_INPUT, searchInput.val()) // TODO: Should set only when window is about to be closed
   })
@@ -91,19 +111,51 @@ $(function () {
     }
   })
 })
+/* ---------- */
 
 /* ----- Functions ----- */
+function selectFirstQuestion () {
+  let soQuestions = $('so-question')
+  soQuestions[0].selected = true
+}
+
+function selectNextQuestion () {
+  let selectedQuestions = $('so-question[selected]')
+
+  if (selectedQuestions.length !== 0)
+    selectedQuestions[0].selected = false
+
+  if (selectedQuestions.next().length === 0) {
+    selectedQuestions.siblings().first()[0].selected = true
+  } else {
+    selectedQuestions.next()[0].selected = true
+  }
+}
+
+function selectPreviousQuestion () {
+  let selectedQuestions = $('so-question[selected]')
+
+  if (selectedQuestions.length !== 0)
+    selectedQuestions[0].selected = false
+
+  if (selectedQuestions.prev().length === 0) {
+    selectedQuestions.siblings().last()[0].selected = true
+  } else {
+    selectedQuestions.prev()[0].selected = true
+  }
+}
+
 function restoreLastSession () {
   const savedQuestions = loadSavedQuestions()
   for (let q of savedQuestions) {
     let soQuestion = document.createElement('so-question')
+    soQuestion.answered = q.answered
+    soQuestion.title = q.title
+    soQuestion.body = q.body
+    soQuestion.id = q.id
+    soQuestion.link = q.link
 
-      soQuestion.answered = q.answered
-      soQuestion.title = q.title
-      soQuestion.body = q.body
-      soQuestion.id = q.id
-      soQuestion.link = q.link
-     document.getElementById('questions-list').appendChild(soQuestion)
+    document.getElementById('questions-list').appendChild(soQuestion)
   }
   // TODO: Select last selected question
 
@@ -149,6 +201,7 @@ function searchStackOverflow (userInput, callback) {
             break
         }
       })
+      // Prepare soQuestion data for saving
       const questionSaveObject = {
         answered: soQuestion.answered,
         title: soQuestion.title,
@@ -157,6 +210,7 @@ function searchStackOverflow (userInput, callback) {
         link: soQuestion.link
       }
       questionsSaveObjects.push(questionSaveObject)
+
       document.getElementById('questions-list').appendChild(soQuestion)
     })
     saveQuestions(questionsSaveObjects)
@@ -173,84 +227,23 @@ function searchStackOverflow (userInput, callback) {
 }
 
 function windowFullSize () {
+  /*
   let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
   if (lastBounds && lastBounds.width !== 0 && lastBounds.height !== 0) {
     window.resizeTo(lastBounds.width, lastBounds.height)
   } else {
     window.resizeTo(CONSTS.SEARCH_WINDOW_WIDTH, CONSTS.SEARCH_WINDOW_HEIGHT)
   }
+  */
 }
 
-function enableNavigationThroughElements (elementClass, preselectFirst) {
+function scrollIfQuestionNotVisible () {
+  let selectedQ = $('so-question[selected]')
 
-  // TODO
-  /*
-  let el = $(`.${elementClass}`)
-  let elSelected = null
-
-  if (preselectFirst) {
-    elSelected = el.eq(0).addClass('selected')
-    $('.answers').empty()
-    $('.answers').append(spinnerHTML())
-    config.set(CONSTS.CONFIG_SELECTED_QUESTION, el.attr('id'))
-    getAnswersToQuestion($(elSelected).attr('id'), (answers, question) => {
-      config.set(CONSTS.CONFIG_SELECTED_QUESTION_ANSWERS, answers)
-      showAnswers(answers, question)
-    })
-  }
-
-  $(window).keydown((e) => {
-    if (e.which === CONSTS.ARROW_DOWN_KEYCODE) {
-      $('#search-input').blur()
-      e.preventDefault() // Prevent div scrolling using arrow keys
-      elSelected = $('.selected')
-      if (elSelected) {
-        let next = elSelected.next()
-        console.log(next.attr('id'))
-        if (next.length > 0) {
-          elSelected.removeClass('selected')
-          elSelected = next.addClass('selected')
-        }
-      } else {
-        elSelected = el.eq(0).addClass('selected')
-      }
-    } else if (e.which === CONSTS.ARROW_UP_KEYCODE) {
-      $('#search-input').blur()
-      e.preventDefault() // Prevent div scrolling using arrow keys
-      elSelected = $('.selected')
-      if (elSelected) {
-        let next = elSelected.prev()
-        console.log(next.attr('id'))
-        if (next.length > 0) {
-          elSelected.removeClass('selected')
-          elSelected = next.addClass('selected')
-        }
-      } else {
-        elSelected = el.last().addClass('selected')
-      }
-    }
-    scrollIfElementNotVisible('selected')
-    if (e.which === CONSTS.ARROW_DOWN_KEYCODE || e.which === CONSTS.ARROW_UP_KEYCODE) {
-      let selectedQuestionID = $('.selected').attr('id')
-      config.set(CONSTS.CONFIG_SELECTED_QUESTION, selectedQuestionID)
-      $('.answers').empty()
-      $('.answers').append(spinnerHTML())
-      getAnswersToQuestion(selectedQuestionID, (answers, question) => {
-        showAnswers(answers, question)
-        config.set(CONSTS.CONFIG_SELECTED_QUESTION_ANSWERS, answers)
-      })
-    }
-  })*/
-}
-
-function scrollIfElementNotVisible (className) {
-  let element = $(`.${className}`)
-  let elID = element.attr('id')
-  console.log(elID)
-  if (!isElementInView(element, true)) {
+  if (!isElementInView(selectedQ, true)) {
     let qs = $('.questions')
     qs.animate({
-      scrollTop: qs.scrollTop() + $(`#${elID}`).position().top
+      scrollTop: qs.scrollTop() + selectedQ.position().top
     }, 0)
   }
 }
@@ -275,12 +268,6 @@ function clearView () {
   $('.answers').empty()
   $('.answers-list').empty()
   hideSlider()
-}
-
-function selectQuestion (questionID) {
-  $('.question').removeClass('selected')
-  $(`#${questionID}`).addClass('selected')
-  scrollIfElementNotVisible('selected')
 }
 
 function updateLayout (sliderX, bodyWidth) {
