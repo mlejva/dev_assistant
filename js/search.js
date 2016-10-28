@@ -1,8 +1,6 @@
 'use strict'
 
 /* ----- Global variables ----- */
-// Properties must be "var" instead of "constants" because
-// script can be loaded multiple times through side buttons
 const CONSTS = require('../js/constants.js') // Current pathname is in html folder
 const Config = require('electron-config')
 const config = new Config()
@@ -57,7 +55,7 @@ $(function () {
           selectNextQuestion()
         }
       }
-      
+
       scrollIfQuestionNotVisible()
     }
   })
@@ -76,10 +74,6 @@ $(function () {
       if (searchInput.val()) {
         // windowFullSize()
         searchStackOverflow(searchInput.val(), () => {
-          // TODO
-          // Enable navigation using up & down key arrows
-          // enableNavigationThroughElements('question', true)
-
           let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
           updateLayout(sliderPosX)
         })
@@ -126,7 +120,8 @@ function selectNextQuestion () {
     selectedQuestions[0].selected = false
 
   if (selectedQuestions.next().length === 0) {
-    selectedQuestions.siblings().first()[0].selected = true
+    // selectedQuestions.siblings().first()[0].selected = true
+    selectedQuestions[0].selected = true
   } else {
     selectedQuestions.next()[0].selected = true
   }
@@ -139,7 +134,8 @@ function selectPreviousQuestion () {
     selectedQuestions[0].selected = false
 
   if (selectedQuestions.prev().length === 0) {
-    selectedQuestions.siblings().last()[0].selected = true
+    // selectedQuestions.siblings().last()[0].selected = true
+    selectedQuestions[0].selected = true
   } else {
     selectedQuestions.prev()[0].selected = true
   }
