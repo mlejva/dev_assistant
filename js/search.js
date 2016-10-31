@@ -17,29 +17,9 @@ $(function () {
   searchInput.val(lastSearchInput)
 
   if (searchInput.val()) {
-    //windowFullSize()
     searchInput.select()
     restoreLastSession()
-
-    // TODO
-    // Enable navigation using up & down key arrows
-    // enableNavigationThroughElements('question', false)
-    /*
-    let selectedQuestionID = config.get(CONSTS.CONFIG_SELECTED_QUESTION)
-    if (selectedQuestionID) {
-      selectQuestion(selectedQuestionID)
-      let question = $(`#${selectedQuestionID}`).data('question')
-      showAnswers(config.get(CONSTS.CONFIG_SELECTED_QUESTION_ANSWERS), question)
-      let scrollBarPosition = config.get(CONSTS.CONFIG_ANSWERS_SCROLL_TOP)
-      $('.answers').scrollTop(scrollBarPosition)
-
-      let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
-      let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
-      updateLayout(sliderPosX, lastBounds.width)
-    }
-    */
   }
-
 
 /* Event handlers */
   $(window).keydown((e) => {
@@ -56,7 +36,7 @@ $(function () {
         }
       }
 
-      scrollIfQuestionNotVisible()
+      scrollIfSelectedNotVisible()
     }
   })
 
@@ -72,10 +52,11 @@ $(function () {
       clearView()
 
       if (searchInput.val()) {
-        // windowFullSize()
+        windowFullSize()
         searchStackOverflow(searchInput.val(), () => {
           let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
           updateLayout(sliderPosX)
+          selectFirstQuestion()
         })
       } else {
         windowFullSize()
@@ -89,8 +70,8 @@ $(function () {
   })
 
   $('.slider').mousedown((e) => {
-    isDraggingSlider = true
     e.preventDefault()
+    isDraggingSlider = true
   })
 
   $(document)
@@ -110,38 +91,44 @@ $(function () {
 /* ----- Functions ----- */
 function selectFirstQuestion () {
   let soQuestions = $('so-question')
-  soQuestions[0].selected = true
+  soQuestions[0].select()
+  config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, soQuestions[0].id)
 }
 
 function selectNextQuestion () {
   let selectedQuestions = $('so-question[selected]')
 
-  if (selectedQuestions.length !== 0)
-    selectedQuestions[0].selected = false
+  if ((selectedQuestions.length !== 0) && (selectedQuestions.next().length !== 0)) {
+    selectedQuestions[0].deselect()
+  }
 
   if (selectedQuestions.next().length === 0) {
-    // selectedQuestions.siblings().first()[0].selected = true
-    selectedQuestions[0].selected = true
+    config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, selectedQuestions[0].id)
   } else {
-    selectedQuestions.next()[0].selected = true
+    selectedQuestions.next()[0].select()
+    config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, selectedQuestions.next()[0].id)
   }
 }
 
 function selectPreviousQuestion () {
   let selectedQuestions = $('so-question[selected]')
 
-  if (selectedQuestions.length !== 0)
-    selectedQuestions[0].selected = false
+  if ((selectedQuestions.length !== 0) && (selectedQuestions.prev().length !== 0))
+    selectedQuestions[0].deselect()
 
   if (selectedQuestions.prev().length === 0) {
-    // selectedQuestions.siblings().last()[0].selected = true
-    selectedQuestions[0].selected = true
+    config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, selectedQuestions[0].id)
   } else {
-    selectedQuestions.prev()[0].selected = true
+    selectedQuestions.prev()[0].select()
+    config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, selectedQuestions.prev()[0].id)
   }
 }
 
 function restoreLastSession () {
+  let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
+  let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
+  updateLayout(sliderPosX, lastBounds.width)
+
   const savedQuestions = loadSavedQuestions()
   for (let q of savedQuestions) {
     let soQuestion = document.createElement('so-question')
@@ -153,10 +140,21 @@ function restoreLastSession () {
 
     document.getElementById('questions-list').appendChild(soQuestion)
   }
-  // TODO: Select last selected question
+  // Select last selected question
+  let lastSelectedID = config.get(CONSTS.CONFIG_SELECTED_QUESTION_ID)
+  let matches = $('so-question').filter((index, element) => {
+    return element.id === lastSelectedID
+  })
+  if (matches.length === 1) {
+    let qToBeSelected = matches[0]
+    qToBeSelected.select(() => {
+      let scrollBarPosition = config.get(CONSTS.CONFIG_ANSWERS_SCROLL_TOP)
 
-  let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
-  updateLayout(sliderPosX)
+      $('.answers').scrollTop(scrollBarPosition)
+    })
+    // scrollIfSelectedNotVisible()
+  }
+
 }
 
 function loadSavedQuestions () {
@@ -233,14 +231,19 @@ function windowFullSize () {
   */
 }
 
-function scrollIfQuestionNotVisible () {
+function scrollIfSelectedNotVisible () {
   let selectedQ = $('so-question[selected]')
 
   if (!isElementInView(selectedQ, true)) {
     let qs = $('.questions')
+    // console.log(`Question scrollTop(): ${qs.scrollTop()}`)
+    console.log(`Selected question position().top: ${selectedQ.position().top}`)
+    qs.scrollTop(qs.scrollTop() + selectedQ.position().top)
+    /*
     qs.animate({
       scrollTop: qs.scrollTop() + selectedQ.position().top
     }, 0)
+    */
   }
 }
 
@@ -301,6 +304,6 @@ function hideSlider () {
   $('.slider').css('visibility', 'hidden')
 }
 
-function decodeHTML(encoded) {
+function decodeHTML (encoded) {
   return $("<textarea/>").html(encoded).text()
 }

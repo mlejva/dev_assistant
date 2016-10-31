@@ -70,7 +70,7 @@
     class SoAnswer {
 
       beforeRegister () {
-        // Takes camelcase class name 'StockTicker' -> 'stock-ticker'.
+        // Takes camelcase class name 'SoAnswer' -> 'so-answer'.
         let is = this.constructor.name.replace(/\W+/g, '-')
             .replace(/([a-z\d])([A-Z])/g, '$1-$2').toLowerCase()
 
@@ -90,9 +90,6 @@
       attached () {
         this._updateBody()
         this._updateAcceptedText()
-        if (this.accepted) {
-            console.log(`Upvotes count of the accepted answer: ${this.score}`)
-        }
       }
 
       _updateBody () {
@@ -104,7 +101,6 @@
       _updateAcceptedText () {
         let acceptedTextArea = Polymer.dom(this.root).querySelector('#accepted-text-area')
         const acceptedText = this.accepted ? 'Answer is accepted' : 'Answer is not accepted'
-        if (this.accepted) console.log(`Accepted: ${acceptedText}`)
         $(acceptedTextArea).append(acceptedText)
       }
     }

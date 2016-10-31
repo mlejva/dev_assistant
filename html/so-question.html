@@ -31,6 +31,9 @@
 
       font-size: 14px;
     }
+    .id {
+      font-size: 14px;
+    }
   </style>
 
   <template>
@@ -39,6 +42,12 @@
     <div class='row title'>
       <div class='col-lg-12'>
         <h4>[[title]]</h4>
+      </div>
+    </div>
+
+    <div class='row id'>
+      <div class='col-lg-12'>
+        ID: [[id]]
       </div>
     </div>
 
@@ -81,8 +90,7 @@
           selected: {
             type: Boolean,
             value: false,
-            reflectToAttribute: true,
-            observer: '_selectedChange'
+            reflectToAttribute: true
           }
         }
         this.listeners = {
@@ -98,37 +106,33 @@
       }
 
       _questionTap () {
-        this._selectQuestion()
-        this._showAnswers()
+        this.select()
       }
 /* ---------- */
 
-/* Observers */
-      _selectedChange (newVal, oldVal) {
-        if (newVal) {
-          this._showAnswers()
-        }
-      }
-/* ---------- */
-
-      _selectQuestion () {
+      select (callback) {
+        // Deselect previous question, if any
         if ($('so-question[selected]').length !== 0)
           $('so-question[selected]')[0].selected = false
 
-        this.selected = !this.selected
-      }
-
-      _showAnswers () {
         $('.answers').empty()
         $('.answers').append(CONSTS.LOADING_INDICATOR_HTML)
 
+        this.selected = true
+        config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, this.id)
+
         this._getAnswers(() => {
           $('#loading-indicator').remove()
+          // Callback is optional so check whether is properly defined
+          typeof callback === 'function' && callback()
         })
       }
 
+      deselect () {
+        this.selected = false
+      }
+
       _getAnswers (callback) {
-        // let answers = []
         let jsonHTML = CONSTS.SO_ANSWERS_TO_QUESTION_BASE_API + encodeURIComponent(this.id) + CONSTS.SO_ANSWERS_TO_QUESTION_PARAMETERS_API
         $.getJSON(jsonHTML, (data) => {
           let items = data.items
@@ -151,7 +155,6 @@
                   break
               }
             })
-            // answers.push(answer)
             document.getElementById('answers-list').appendChild(soAnswer)
           })
         })
