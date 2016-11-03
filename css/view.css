@@ -49,6 +49,17 @@ a:hover {
   flex: 1;
 }
 
+#info-text {
+  font-size: 18px;
+  color: #D4D7D6;
+
+  /* Center horizontaly and verticaly */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .questions {
   position: absolute;
   margin: 0 0 0 0;

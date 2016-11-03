@@ -5,6 +5,7 @@ const CONSTS = require('../js/constants.js') // Current pathname is in html fold
 const Config = require('electron-config')
 const config = new Config()
 const { shell } = require('electron')
+
 let isDraggingSlider = false
 
 let questionsIDs = []
@@ -13,15 +14,10 @@ let selectedQuestionIndex = 0
 /* ----- jQuery ready function ----- */
 $(function () {
   let searchInput = $('#search-input')
-  let lastSearchInput = config.get(CONSTS.CONFIG_USER_INPUT)
-  searchInput.val(lastSearchInput)
 
-  if (searchInput.val()) {
-    searchInput.select()
-    restoreLastSession()
-  }
+  restoreLastSession()
 
-/* Event handlers */
+  /* Event handlers */
   $(window).keydown((e) => {
     if (e.which === CONSTS.ARROW_DOWN_KEYCODE || e.which === CONSTS.ARROW_UP_KEYCODE) {
       e.preventDefault()
@@ -36,6 +32,7 @@ $(function () {
         }
       }
 
+      console.log($('so-question[selected]').position().top)
       scrollIfSelectedNotVisible()
     }
   })
@@ -53,14 +50,20 @@ $(function () {
 
       if (searchInput.val()) {
         windowFullSize()
-        searchStackOverflow(searchInput.val(), () => {
-          let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
-          updateLayout(sliderPosX)
-          selectFirstQuestion()
+        searchStackOverflow(searchInput.val(), (nothingFound) => {
+          if (!nothingFound) {
+            let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
+            updateLayout(sliderPosX)
+            selectFirstQuestion()
+          } else {
+            // TODO: Show user that nothing was found
+            insertCenterInfoText(CONSTS.CENTER_INFO_TEXT_NOTHING_FOUND)
+          }
         })
       } else {
         windowFullSize()
         hideSlider()
+        insertCenterInfoText(CONSTS.CENTER_INFO_TEXT_SEARCH_TIP)
       }
     }
   })
@@ -85,6 +88,7 @@ $(function () {
       updateLayout(e.pageX)
     }
   })
+  /* ---------- */
 })
 /* ---------- */
 
@@ -125,36 +129,47 @@ function selectPreviousQuestion () {
 }
 
 function restoreLastSession () {
-  let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
-  let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
-  updateLayout(sliderPosX, lastBounds.width)
+  let searchInput = $('#search-input')
+  let lastSearchInput = config.get(CONSTS.CONFIG_USER_INPUT)
+  searchInput.val(lastSearchInput)
 
-  const savedQuestions = loadSavedQuestions()
-  for (let q of savedQuestions) {
-    let soQuestion = document.createElement('so-question')
-    soQuestion.answered = q.answered
-    soQuestion.title = q.title
-    soQuestion.body = q.body
-    soQuestion.id = q.id
-    soQuestion.link = q.link
+  if (searchInput.val()) {
+    searchInput.select()
 
-    document.getElementById('questions-list').appendChild(soQuestion)
-  }
-  // Select last selected question
-  let lastSelectedID = config.get(CONSTS.CONFIG_SELECTED_QUESTION_ID)
-  let matches = $('so-question').filter((index, element) => {
-    return element.id === lastSelectedID
-  })
-  if (matches.length === 1) {
-    let qToBeSelected = matches[0]
-    qToBeSelected.select(() => {
-      let scrollBarPosition = config.get(CONSTS.CONFIG_ANSWERS_SCROLL_TOP)
+    const savedQuestions = loadSavedQuestions()
+    for (let q of savedQuestions) {
+      let soQuestion = document.createElement('so-question')
+      soQuestion.answered = q.answered
+      soQuestion.title = q.title
+      soQuestion.body = q.body
+      soQuestion.id = q.id
+      soQuestion.link = q.link
 
-      $('.answers').scrollTop(scrollBarPosition)
+      document.getElementById('questions-list').appendChild(soQuestion)
+    }
+    // Select last selected question
+    let lastSelectedID = config.get(CONSTS.CONFIG_SELECTED_QUESTION_ID)
+    let matches = $('so-question').filter((index, element) => {
+      return element.id === lastSelectedID
     })
-    // scrollIfSelectedNotVisible()
-  }
+    if (matches.length === 1) {
+      let qToBeSelected = matches[0]
+      qToBeSelected.select(() => {
+        let scrollBarPosition = config.get(CONSTS.CONFIG_ANSWERS_SCROLL_TOP)
+        $('.answers').scrollTop(scrollBarPosition)
+      })
 
+      console.log($('.questions').scrollTop())
+      console.log($('so-question[selected]').position().top)
+      scrollIfSelectedNotVisible()
+
+      let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
+      let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
+      //updateLayout(sliderPosX, lastBounds.width)
+    }
+  } else {
+    insertCenterInfoText(CONSTS.CENTER_INFO_TEXT_SEARCH_TIP)
+  }
 }
 
 function loadSavedQuestions () {
@@ -167,13 +182,15 @@ function saveQuestions (questionsSaveObjects) {
 
 function searchStackOverflow (userInput, callback) {
   // windowFullSize()
-  $('.loading-center').append(CONSTS.LOADING_INDICATOR_HTML)
+  let nothingFound = true
 
+  $('.loading-center').append(CONSTS.LOADING_INDICATOR_HTML)
   let jsonHTML = CONSTS.SO_SEARCH_QUESTIONS_API + `&q=${encodeURIComponent(userInput)}`
   $.getJSON(jsonHTML, (data) => {
     let items = data.items
     let questionsSaveObjects = [] // Because DOM elements cannot be converted to JSON
     $.each(items, (key, q) => {
+      nothingFound = false
       let soQuestion = document.createElement('so-question')
 
       $.each(q, (key, value) => {
@@ -211,7 +228,7 @@ function searchStackOverflow (userInput, callback) {
   })
   .done(() => {
     $('.loading-center').empty()
-    callback()
+    callback(nothingFound)
   })
   .fail((jqXHR, status, error) => {
     clearView()
@@ -236,7 +253,7 @@ function scrollIfSelectedNotVisible () {
 
   if (!isElementInView(selectedQ, true)) {
     let qs = $('.questions')
-    // console.log(`Question scrollTop(): ${qs.scrollTop()}`)
+    console.log(`Question scrollTop(): ${qs.scrollTop()}`)
     console.log(`Selected question position().top: ${selectedQ.position().top}`)
     qs.scrollTop(qs.scrollTop() + selectedQ.position().top)
     /*
@@ -261,6 +278,7 @@ function isElementInView (element, fullyInView) {
 }
 
 function clearView () {
+  $('.center>p').empty()
   $('.loading-center').empty()
   $('.questions').empty()
   $('.questions-list').empty()
@@ -295,6 +313,7 @@ function updateLayout (sliderX, bodyWidth) {
   let leftPercent = sliderPercent + (sliderOffset / bodyWidth) * 100
   let rightPercent = 100 - leftPercent
 
+
   slider.css('left', `${sliderPercent}%`)
   left.css('width', `${leftPercent}%`)
   right.css('width', `${rightPercent}%`)
@@ -306,4 +325,9 @@ function hideSlider () {
 
 function decodeHTML (encoded) {
   return $("<textarea/>").html(encoded).text()
+}
+
+function insertCenterInfoText (text) {
+  $('.center>p').empty()
+  $('.center').append(`<p id="info-text">${text}</p>`)
 }
