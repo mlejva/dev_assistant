@@ -10,8 +10,7 @@ const {
   BrowserWindow,
   globalShortcut
 } = require('electron')
-const reload = require('electron-reload')
-reload(__dirname, {electron: require('electron')})
+const windowStateKeeper = require('electron-window-state') // For restoring window's position and bounds from the last session
 const Config = require('electron-config')
 const config = new Config()
 
@@ -31,7 +30,6 @@ app.on('window-all-closed', () => {
 app.on('ready', () => {
   app.dock.hide()
   config.set(CONSTS.CONFIG_USER_INPUT, '') // Clear last user's search input
-  config.set(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS, '') // Clear last search window bounds on new start
 
   let trayIconPath = path.join(__dirname, 'img', 'icon.png')
   tray = new Tray(trayIconPath)
@@ -45,18 +43,12 @@ app.on('ready', () => {
   const searchShortcut = globalShortcut.register('CommandOrControl+Shift+Space', () => {
     if (!isSearchWindowFocused) {
       openSearchWindow()
-      // Set search window to latest bounds
-      let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
-      if (lastBounds && lastBounds.width !== 0 && lastBounds.height !== 0) {
-        searchWindow.setBounds(lastBounds)
-      }
     } else {
-      config.set(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS, searchWindow.getBounds())
       searchWindow.close()
     }
   })
   if (!searchShortcut) {
-    console.warn('Warning: Could not register shortcut for fast search')
+    console.warn('Warning: Could not register shortcut for the fast search')
   }
 })
 
@@ -64,16 +56,20 @@ app.on('will-quit', () => { globalShortcut.unregisterAll() })
 
 /* ----- Functions ----- */
 function openSearchWindow () {
+  let searchWindowState = windowStateKeeper()
   let searchWindowOptions = {
-    width: CONSTS.SEARCH_WINDOW_WIDTH,
-    height: CONSTS.SEARCH_WINDOW_HEIGHT,
-    /* maxHeight: CONSTS.SEARCH_WINDOW_MAX_HEIGHT, */
+    x: searchWindowState.x,
+    y: searchWindowState.y,
+    width: searchWindowState.width,
+    height: searchWindowState.height,
     resizable: true,
     frame: false,
     alwaysOnTop: true,
     show: false
   }
   searchWindow = new BrowserWindow(searchWindowOptions)
+  searchWindowState.manage(searchWindow)
+
   searchWindow.loadURL(`file://${__dirname}/html/index.html`)
 
   searchWindow.once('ready-to-show', () => {

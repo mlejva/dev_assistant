@@ -10,7 +10,6 @@ let isDraggingSlider = false
 
 let questionsIDs = []
 let selectedQuestionIndex = 0
-// let newQEl = document.registerElement('question-element', QuestionElement)
 /* ----- jQuery ready function ----- */
 $(function () {
   let searchInput = $('#search-input')
@@ -159,13 +158,11 @@ function restoreLastSession () {
         $('.answers').scrollTop(scrollBarPosition)
       })
 
-      console.log($('.questions').scrollTop())
-      console.log($('so-question[selected]').position().top)
-      scrollIfSelectedNotVisible()
-
       let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
       let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
-      //updateLayout(sliderPosX, lastBounds.width)
+      updateLayout(sliderPosX, lastBounds.width)
+
+      scrollIfSelectedNotVisible()
     }
   } else {
     insertCenterInfoText(CONSTS.CENTER_INFO_TEXT_SEARCH_TIP)
@@ -255,12 +252,8 @@ function scrollIfSelectedNotVisible () {
     let qs = $('.questions')
     console.log(`Question scrollTop(): ${qs.scrollTop()}`)
     console.log(`Selected question position().top: ${selectedQ.position().top}`)
+    console.log(`selectedQ.position().top + qs.scrollTop(): ${selectedQ.position().top + qs.scrollTop()}`)
     qs.scrollTop(qs.scrollTop() + selectedQ.position().top)
-    /*
-    qs.animate({
-      scrollTop: qs.scrollTop() + selectedQ.position().top
-    }, 0)
-    */
   }
 }
 
