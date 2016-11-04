@@ -159,8 +159,10 @@ function restoreLastSession () {
       })
 
       let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
-      let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
-      updateLayout(sliderPosX, lastBounds.width)
+      // TODO: Old because no longer explicitely saving bounds of windows. electron-window-state is now managing restoring bounds
+      //let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
+      //updateLayout(sliderPosX, lastBounds.width)
+      updateLayout(sliderPosX)
 
       scrollIfSelectedNotVisible()
     }
