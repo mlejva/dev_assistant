@@ -1,8 +1,18 @@
 {
-  "name": "dev_assistant",
-  "version": "1.0.0",
-  "description": "Assistant for developers",
+  "name": "Deviac",
+  "version": "0.0.1",
+  "author": "Vaclav Mlejnsky",
+  "description": "Fast search on StackOverflow",
   "main": "main.js",
+  "build": {
+    "appId": "com.deviac",
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    }    
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "standard": {
     "globals": [
       "$"
@@ -17,11 +27,9 @@
   },
   "devDependencies": {
     "devtron": "^1.4.0",
-    "electron": "^1.4.5"
+    "electron": "^1.4.5",
+    "electron-builder": "^7.21.0",
+    "electron-packager": "^8.2.0"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Vaclav Mlejnsky",
   "license": "ISC"
 }

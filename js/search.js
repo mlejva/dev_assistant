@@ -48,7 +48,6 @@ $(function () {
       clearView()
 
       if (searchInput.val()) {
-        windowFullSize()
         searchStackOverflow(searchInput.val(), (nothingFound) => {
           if (!nothingFound) {
             let sliderPosX = config.get(CONSTS.CONFIG_SLIDER_POSITION_X)
@@ -60,7 +59,6 @@ $(function () {
           }
         })
       } else {
-        windowFullSize()
         hideSlider()
         insertCenterInfoText(CONSTS.CENTER_INFO_TEXT_SEARCH_TIP)
       }
@@ -180,7 +178,6 @@ function saveQuestions (questionsSaveObjects) {
 }
 
 function searchStackOverflow (userInput, callback) {
-  // windowFullSize()
   let nothingFound = true
 
   $('.loading-center').append(CONSTS.LOADING_INDICATOR_HTML)
@@ -234,17 +231,6 @@ function searchStackOverflow (userInput, callback) {
     $('.questions').append(error)
     console.log(`Error while trying to get SO questions - ${error}`)
   })
-}
-
-function windowFullSize () {
-  /*
-  let lastBounds = config.get(CONSTS.CONFIG_SEARCH_WINDOW_LAST_BOUNDS)
-  if (lastBounds && lastBounds.width !== 0 && lastBounds.height !== 0) {
-    window.resizeTo(lastBounds.width, lastBounds.height)
-  } else {
-    window.resizeTo(CONSTS.SEARCH_WINDOW_WIDTH, CONSTS.SEARCH_WINDOW_HEIGHT)
-  }
-  */
 }
 
 function scrollIfSelectedNotVisible () {

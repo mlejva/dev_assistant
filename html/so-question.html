@@ -44,13 +44,13 @@
         <h4>[[title]]</h4>
       </div>
     </div>
-
+<!--
     <div class='row id'>
       <div class='col-lg-12'>
         ID: [[id]]
       </div>
     </div>
-
+-->
     <div class='row link'>
       <div class='col-lg-12'>
         <a on-click='_handleLinkClick' id='link-[[id]]' href='[[link]]'>
@@ -115,16 +115,19 @@
         if ($('so-question[selected]').length !== 0)
           $('so-question[selected]')[0].selected = false
 
-        $('.answers').empty()
+        this._clearAnswersDiv()
         $('.answers').append(CONSTS.LOADING_INDICATOR_HTML)
 
         this.selected = true
         config.set(CONSTS.CONFIG_SELECTED_QUESTION_ID, this.id)
 
-        this._getAnswers(() => {
+        this._getAnswers((nothingFound) => {
           $('#loading-indicator').remove()
           // Callback is optional so check whether is properly defined
           typeof callback === 'function' && callback()
+          if (nothingFound) {
+            this._insertAnswersInfoText(CONSTS.ANSWERS_INFO_TEXT_NO_ANSWERS)
+          }
         })
       }
 
@@ -133,10 +136,12 @@
       }
 
       _getAnswers (callback) {
+        let nothingFound = true
         let jsonHTML = CONSTS.SO_ANSWERS_TO_QUESTION_BASE_API + encodeURIComponent(this.id) + CONSTS.SO_ANSWERS_TO_QUESTION_PARAMETERS_API
         $.getJSON(jsonHTML, (data) => {
           let items = data.items
           $.each(items, (key, a) => {
+            nothingFound = false
             let soAnswer = document.createElement('so-answer')
 
             $.each(a, (key, value) => {
@@ -159,8 +164,17 @@
           })
         })
         .done(() => {
-          callback()
+          callback(nothingFound)
         })
+      }
+
+      _insertAnswersInfoText (text) {
+        $('.answers').empty()
+        $('.answers').append(`<p id="info-text">${text}</p>`)
+      }
+
+      _clearAnswersDiv () {
+        $('.answers').empty()
       }
     }
 
