@@ -11,4 +11,4 @@ Currently working only on macOS.
   4. Dev assistant will run in the background (you can see red square on your menu bar). <br />
   5. You can display dev assistant's window by pressing *SHIFT + CMD + SPACE* <br />
 
-![alt text](https://imgur.com/a/SCInTP9)
+![alt text](https://i.imgur.com/TfmScLg.png)
